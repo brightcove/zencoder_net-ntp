@@ -1,3 +1,7 @@
+== Unreleased
+
+* Fix Response#precision, which was off by one
+
 == 2.0.0 / 2010-12-09
 
 * Refactor and re-release
