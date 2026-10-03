@@ -148,11 +148,11 @@ module Net #:nodoc:
       end
 
       def root_delay
-        @root_delay ||= bin2frac(packet_data_by_field[:delay_fb])
+        @root_delay ||= (packet_data_by_field[:delay] + bin2frac(packet_data_by_field[:delay_fb]))
       end
 
       def root_dispersion
-        @root_dispersion ||= packet_data_by_field[:disp]
+        @root_dispersion ||= (packet_data_by_field[:disp] + bin2frac(packet_data_by_field[:disp_fb]))
       end
 
       def reference_clock_identifier

@@ -1,3 +1,7 @@
+== Unreleased
+
+* Fix Response#root_dispersion, which dropped the fraction, and Response#root_delay, which dropped the seconds
+
 == 2.0.0 / 2010-12-09
 
 * Refactor and re-release
