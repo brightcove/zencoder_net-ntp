@@ -1,3 +1,9 @@
+== Unreleased
+
+* Fix request transmit timestamp encoding, which made Response#offset wrong by up to 0.5 seconds (#14)
+* Response#originate_timestamp is decoded relative to the NTP epoch, like the other timestamps (a zero field now gives -2208988800)
+* Add Response#client_time_send; Response.new takes it as an optional third argument
+
 == 2.0.0 / 2010-12-09
 
 * Refactor and re-release

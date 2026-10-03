@@ -68,11 +68,8 @@ module Net #:nodoc:
       sock.bind(src_host, src_port)
       sock.connect(host, port)
 
-      client_localtime      = Time.now.to_f
-      client_adj_localtime  = client_localtime + NTP_ADJ
-      client_frac_localtime = frac2bin(client_adj_localtime)
-
-      ntp_msg = (['00011011']+Array.new(12, 0)+[client_localtime, client_frac_localtime.to_s]).pack("B8 C3 N10 B32")
+      client_time_send = Time.now.to_f
+      ntp_msg = ['00011011'].pack("B8") + ("\0" * 39) + timestamp_to_ntp(client_time_send)
 
       sock.print ntp_msg
       sock.flush
@@ -85,29 +82,26 @@ module Net #:nodoc:
       else
         client_time_receive = Time.now.to_f
         data, _ = sock.recvfrom(960)
-        Response.new(data, client_time_receive)
+        Response.new(data, client_time_receive, client_time_send)
       end
     end
 
-    def self.frac2bin(frac) #:nodoc:
-      bin  = ''
+    def self.timestamp_to_ntp(time) #:nodoc:
+      ntp  = time.to_r + NTP_ADJ
+      secs = ntp.floor
 
-      while bin.length < 32
-        bin += ( frac * 2 ).to_i.to_s
-        frac = ( frac * 2 ) - ( frac * 2 ).to_i
-      end
-
-      bin
+      [secs & 0xFFFFFFFF, ((ntp - secs) * 2**32).floor].pack("NN")
     end
-    private_class_method :frac2bin
+    private_class_method :timestamp_to_ntp
 
     class Response
 
-      attr_reader :client_time_receive
+      attr_reader :client_time_receive, :client_time_send
 
-      def initialize(raw_data, client_time_receive)
+      def initialize(raw_data, client_time_receive, client_time_send = nil)
         @raw_data             = raw_data
         @client_time_receive  = client_time_receive
+        @client_time_send     = client_time_send
         @packet_data_by_field = nil
       end
 
@@ -168,7 +162,7 @@ module Net #:nodoc:
       end
 
       def originate_timestamp
-        @originate_timestamp ||= (packet_data_by_field[:org_time] + bin2frac(packet_data_by_field[:org_time_fb]))
+        @originate_timestamp ||= ((packet_data_by_field[:org_time] + bin2frac(packet_data_by_field[:org_time_fb])) - NTP_ADJ)
       end
 
       def receive_timestamp
@@ -185,7 +179,7 @@ module Net #:nodoc:
 
       # As described in http://tools.ietf.org/html/rfc958
       def offset
-        @offset ||= (receive_timestamp - originate_timestamp + transmit_timestamp - client_time_receive) / 2.0
+        @offset ||= (receive_timestamp - (client_time_send || originate_timestamp) + transmit_timestamp - client_time_receive) / 2.0
       end
 
     protected
