@@ -87,6 +87,8 @@ module Net #:nodoc:
         data, _ = sock.recvfrom(960)
         Response.new(data, client_time_receive)
       end
+    ensure
+      sock.close if sock
     end
 
     def self.frac2bin(frac) #:nodoc:

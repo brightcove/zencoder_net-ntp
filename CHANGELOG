@@ -1,3 +1,7 @@
+== Unreleased
+
+* Close the UDP socket after each query
+
 == 2.0.0 / 2010-12-09
 
 * Refactor and re-release
